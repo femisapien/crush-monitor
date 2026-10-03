@@ -2,7 +2,7 @@
 
 简体中文 · [English](README.en.md)
 
-一个用 Jev 分析你和 Crush 或对象聊天的小工具。帮你读懂一点对方的情绪和想法，也看看自己的回复哪里没表达好、可以怎么调整。
+一个分析你和 Crush 或对象聊天的小工具，支持 Jev 和常见文本大模型。帮你读懂一点对方的情绪和想法，也看看自己的回复哪里没表达好、可以怎么调整。
 
 不过，AI 不知道你们现实中怎么相处，也不了解聊天之外的故事。分析结果就当图一乐、做个参考。怎么理解对方、怎么表达自己，最后还是得靠自己的感受和真诚。
 
@@ -12,7 +12,7 @@
 - **情绪与意图**：每句两行标签，从 12 类情绪、35 类意图中分别展示概率最高的三项。
 - **好感度与回复评级**：顶部显示好感信号评分，自己的回复按 SSS 到 D 分档，并给出下一步建议。
 - **连续分析**：继续粘贴新记录即可更新，识别重复片段，自动分批处理长记录；已分析内容保存在本机，刷新后可以继续。
-- **本机运行，自带 Key**：无需服务器，支持 TypeSafe 官方、Vercel AI Gateway 和 OpenRouter，使用自己的 Key 和额度。
+- **本机运行，网页配 Key**：启动后在页面选择平台、填写 Key、检测连接即可；无需改配置文件。
 
 ## 为什么用 Jev
 
@@ -21,19 +21,47 @@ Jev 是 TypeSafe 推出的结构化判断模型，直接返回分类、评分和
 - [创始人 Diogo Almeida 的 Jev 首发推文（2026-09-15）](https://x.com/CompleteSkeptic/status/2099925682726002904)
 - [官方模型介绍](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
 
-## 申请 API Key
+## 模型选择与 API Key
 
-下面三个平台任选一个，都调用 Jev。不用同时注册，也不用把网站部署到 Vercel。
+**建议优先用 Jev。** 本项目最初围绕它的分类、评分和概率输出设计。如果注册、支付或获取 Jev Key 不方便，可以改用 DeepSeek、通义千问等 LLM，情绪、意图、好感度和回复评级等功能保持不变。不同模型的结果会有差异，目前没有恋爱聊天场景的准确率排名。
+
+### 首选：Jev
+
+在下面任一平台创建 Key，再到网页选择对应的 **Jev** 入口。型号已预设，无需自己查找，也不需要把项目部署到 Vercel。
 
 | 平台 | 创建 Key | 配置时选择 | 免费额度 |
 | --- | --- | --- | --- |
-| TypeSafe 官方 | 登录 [TypeSafe 控制台](https://console.typesafe.ai/)，在 API Keys 中创建并复制 Key | `typesafe` | 此前新用户有 **$5 试用额度**，后续是否赠送及金额以控制台为准 |
-| Vercel AI Gateway | 注册或登录 Vercel，进入 [AI Gateway → API Keys](https://vercel.com/d?to=/%5Bteam%5D/~/ai-gateway/api-keys)，点击 **Create key**。需要的是 AI Gateway Key，不是账户 Access Token | `vercel` | 免费档 **每月 $5**；需绑卡验证，购买额度后不再享有每月赠额（[说明](https://vercel.com/docs/ai-gateway/pricing)） |
-| OpenRouter | 注册或登录 [OpenRouter](https://openrouter.ai/settings/keys)，在 Keys 页面点击 **Create Key**，创建并复制 Key | `openrouter` | 新用户有少量试用额度，官方未公布固定金额；[Jev 为付费模型](https://openrouter.ai/typesafe/jev-1.13/)，不属于免费模型（[说明](https://openrouter.ai/support/)） |
+| TypeSafe 官方 | 登录 [TypeSafe 控制台](https://console.typesafe.ai/)，在 API Keys 中创建并复制 Key | Jev · TypeSafe | **新用户目前不再赠送免费额度**。此前的 $5 活动已停止，恢复时间未定（[官方公告](https://x.com/typesafeai/status/2104337824292220981)） |
+| Vercel AI Gateway | 注册或登录 Vercel，进入 [AI Gateway → API Keys](https://vercel.com/d?to=/%5Bteam%5D/~/ai-gateway/api-keys)，点击 **Create key**。需要的是 AI Gateway Key，不是账户 Access Token | Jev · Vercel AI Gateway | 平台免费档 **每月 $5，但当前不能用于 Jev**。Jev 标记为不支持免费额度，需购买额度（[型号列表](https://vercel.com/ai-gateway/models?q=jev)、[规则](https://vercel.com/docs/ai-gateway/pricing)） |
+| OpenRouter | 注册或登录 [OpenRouter](https://openrouter.ai/settings/keys)，在 Keys 页面点击 **Create Key**，创建并复制 Key | Jev · OpenRouter | 官方称有少量新用户试用额度，但未明确金额及是否可用于 Jev。[Jev 为付费模型](https://openrouter.ai/typesafe/jev-1.13/)，没有可用余额需充值；不要把免费模型额度当成 Jev 额度（[说明](https://openrouter.ai/support/)） |
 
-Vercel AI Gateway 目前要求账号先绑定有效信用卡，免费调用也需要完成验证；否则会返回 403。
+Vercel 免费档需完成信用卡验证（[官方说明](https://community.vercel.com/t/free-credits-temporarily-have-restricted-access-due-to-abuse/21461/8)）；购买额度后转为付费档，不再享有每月 $5 赠额。
 
-免费额度核对日期：2026-09-22。确认所选平台有可用额度及 Jev 访问权限；赠额和活动可能变化，以各平台控制台为准。
+核对日期：**2026-10-04**。平台赠额不等于 Jev 免费；使用前确认账户余额和型号权限，后续以官方政策及控制台为准。
+
+### 备选：LLM 文本大模型
+
+国内用户可从 DeepSeek 或通义千问开始；已有其他平台 Key，也可以使用对应入口。
+
+| LLM 平台 | 申请 Key | 网页配置 | 免费额度 |
+| --- | --- | --- | --- |
+| [DeepSeek](https://platform.deepseek.com/api_keys) | API Keys → 创建 | 选择 DeepSeek，自动读取账号模型，优先 `deepseek-flash`（V4.1 Flash） | 不承诺赠额，以控制台为准 |
+| [通义千问 · 百炼](https://bailian.console.aliyun.com/) | 创建北京地域 API Key | 选择百炼（北京），默认 `qwen3.8-flash` | 试用额度、模型范围和有效期以控制台为准 |
+| [智谱 GLM](https://bigmodel.cn/usercenter/proj-mgmt/apikeys) | API Key → 创建 | 选择智谱，默认 `glm-4.7-flash`；确认账号可用模型 | 是否免费及限速以所选模型控制台为准 |
+| [Kimi](https://platform.kimi.com/) / [豆包 · 火山方舟](https://console.volcengine.com/ark/) / [硅基流动](https://cloud.siliconflow.cn/account/ak) | 各平台控制台创建 | 选择平台，粘贴 Key 后自动显示模型列表；也可手动填写 ID；豆包也可填推理接入点 ID | 以平台、模型和活动为准 |
+| [OpenAI](https://platform.openai.com/api-keys) / [Gemini](https://aistudio.google.com/apikey) / [Claude](https://platform.claude.com/settings/keys) | 各平台创建开发者 API Key | 选择平台后读取或填写模型 ID | 以账号和模型为准；聊天订阅不等于 API 额度 |
+| [OpenRouter](https://openrouter.ai/settings/keys) / [Vercel AI Gateway](https://vercel.com/ai-gateway) | 创建平台 API Key | 选择带「LLM」的入口，填写平台模型 ID | 以平台及所选模型为准 |
+
+- **选型号**：填 Key 后自动读取列表，可以搜索；点击型号会回填输入框并收起列表。若平台不提供列表，按其控制台填写模型 ID。
+- **先选快速文本模型**：如 DeepSeek Flash、Qwen Flash。图片、语音、向量等专用型号会被过滤；深度思考模型可能等待更久。列表里能看到，不代表账号已开通或有可用额度，以连接检测为准。
+- **检测并保存**：显示耗时，可随时取消，最长 40 秒；服务未开通或额度不足会明确提示。检测失败不会覆盖原来的配置。聊天会员订阅不等于 API 额度。
+
+<details>
+<summary>其他地域、第三方接口或本机模型</summary>
+
+选择「其他 OpenAI / Claude 兼容服务」，填写服务商提供的 Base URL、模型 ID 和 Key；本机无鉴权服务可填 `local`。接口兼容不代表每个型号都已实测。
+
+</details>
 
 ## 本地运行
 
@@ -41,35 +69,35 @@ Vercel AI Gateway 目前要求账号先绑定有效信用卡，免费调用也�
 
 ```sh
 npm ci
-npm run setup
-```
-
-按提示**选择平台 → 粘贴该平台的 Key**。Key 输入时不显示，配置保存在本机 `.env`；地址和模型名自动设置。随后会用一条测试消息检测连接，消耗少量 API 额度，不读取你的聊天。
-
-```sh
 npm run build
 npm start
 ```
 
-打开 **http://127.0.0.1:3178/**。使用时保持终端运行；下次只需执行 `npm start`。切换平台或更换 Key，重新运行 `npm run setup`，然后重启服务，无需重新构建。
+服务启动后会尝试自动打开 **http://127.0.0.1:3178/**；没有打开就手动访问。首次进入会弹出「模型设置」：**选服务商 → 填 Key → 确认型号 → 检测连接并保存**。检测只发送测试题，使用少量 API 额度，不会读取聊天。失败不会覆盖原来的配置。
+
+保持终端运行，下次只需 `npm start`。更换平台或 Key，在「聊天设置 → 模型设置」修改，保存后即时生效，无需重启。换模型会保留聊天、清除旧分析并重新分析，避免混用结果。
+
+Key 保存在本机服务目录的 `.runtime/model.json`，不写入浏览器存储，也不会从设置接口返回完整 Key。这个文件是**本机明文配置**（macOS / Linux 限当前用户读写），不是加密保险箱；不要分享 `.runtime` 文件夹。配置页面只允许本机访问，默认服务也只监听本机。
 
 <details>
-<summary>手动配置 / 旧版升级</summary>
+<summary>旧版升级 / 命令行配置</summary>
 
-也可以复制 `.env.example` 为 `.env`，只改这两行：
+旧 `.env` 中的 `JEV_PROVIDER`、`JEV_API_KEY`、`TYPESAFE_API_KEY` 仍兼容，`npm run setup` 仍可配置 Jev。**网页保存的配置优先于 `.env`**；如需恢复环境变量配置，删除 `.runtime/model.json` 后刷新页面。
 
-```dotenv
-JEV_PROVIDER=vercel
-JEV_API_KEY=你的平台Key
-```
-
-`JEV_PROVIDER` 只能填 `typesafe`、`vercel` 或 `openrouter`，Key 必须来自对应平台。不要填写 API 地址或模型名。原来的 `TYPESAFE_API_KEY=...` 配置仍然兼容，不切平台无需修改。
-
-已有 `JEV_API_KEY` 时优先使用它；未填写时，按所选平台读取 `TYPESAFE_API_KEY`、`AI_GATEWAY_API_KEY` 或 `OPENROUTER_API_KEY`。不跨平台借用 Key。终端环境变量优先于 `.env`，排查配置时注意是否有旧的环境变量。
+网页预设不允许把平台 Key 悄悄发往另一个地址。切换服务商或 Base URL 后，需要重新填写对应 Key。无图形界面的环境可设置 `CRUSH_OPEN_BROWSER=0` 关闭自动打开浏览器。
 
 </details>
 
-连接检测失败时，运行 `npm run check:api` 重试。401 检查 Key，402 检查额度，403 检查模型权限，429 等待限流恢复。网络错误需要检查本机到对应平台的连接。配置向导保存成功与连接检测通过会分开提示。
+401 检查 Key，402 检查额度，403 检查模型权限，404 检查模型 ID / 地址，429 等待限流恢复。如果接口不支持 `response_format`，在「连接选项」中关闭 JSON 模式再检测；返回结果仍会严格校验。
+
+### 让 AI Agent 帮你安装
+
+可以把仓库链接发给 Codex、Claude Code 等，让它按「本地运行」完成安装。给 Agent 的简短指引：
+
+1. 检查 Node.js 版本，安装依赖、构建并启动服务；没有 Key 也可以先把网页打开，不必等待用户申请完。
+2. 用户未指定模型时，先推荐 Jev 并给出上面的申请链接；获取不便时再介绍 LLM 备选，尊重用户已有的 Key 和选择。
+3. 引导用户在本机「模型设置」中填写 Key、选择型号并检测，不要求把 Key 发到对话里，也不必手改配置文件。失败时按页面提示检查权限、额度或型号，不反复盲目重试。
+4. 交付时给出实际访问地址，说明如何下次启动、终端按 `Ctrl+C` 停止；分清「网页已启动」「连接检测通过」「聊天分析已验证」，没有验证的不要说已完成。
 
 ## 怎么用
 
@@ -109,11 +137,11 @@ iMessage 等软件复制后若只有正文，没有发送人，请先补上 `Ale
 - 每个模型请求仍控制在 500 条、12,000 字以内；单条超长消息会保存并提示拆分。一次粘贴超过 25 万字符时请分次追加，历史总量受浏览器存储空间限制。
 - 聊天和分析保存在当前浏览器的本机数据库，刷新后恢复；设置中的“清空聊天，重新开始”会删除这些记录。不同浏览器或不同网址端口不共享记录，清理浏览器数据也会删除记录。
 - 分析所需原文会发送至你选择的平台及其模型服务商，模型用量由自己的账号承担；本机保存不等于离线分析。
-- 网页能打开但无法分析时，先检查启动终端、Key 和账号额度。不要把 `.env` 或私人聊天提交到仓库。
+- 网页能打开但无法分析时，先检查启动终端、Key 和账号额度。不要把 `.env`、`.runtime` 或私人聊天提交到仓库。
 
 ## 开发
 
-React + TypeScript + Vite + Express。三平台共用同一套情绪、意图和评分规则，仅切换请求入口：
+React + TypeScript + Vite + Express。所有模型共用同一套情绪、意图、好感度、回复评级、下一步规则。支持 OpenAI Chat Completions、Anthropic Messages，以及原来的 Jev 接口：
 
 | 平台 | 接口 | 模型 |
 | --- | --- | --- |
@@ -121,7 +149,11 @@ React + TypeScript + Vite + Express。三平台共用同一套情绪、意图和
 | Vercel | [TypeSafe 兼容接口](https://vercel.com/docs/ai-gateway/sdks-and-apis/typesafe) | `typesafe-ai/jev` |
 | OpenRouter | [Decisions（Alpha）](https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-questions-and-answers-request) | `typesafe/jev-1.13` |
 
-保留 Jev 原始概率和确定度，不通过 Chat Completions 模拟评分。Vercel 的模型别名由平台维护，实际版本可能更新；不同入口不保证给出完全相同的结果。三平台有离线协议与分析流程测试覆盖。2026-09-22 已用真实 Vercel 账号验证三种判断、好感度总览、情绪与意图、回复评级；OpenRouter 尚未完成真实账号调用验证。自己的账号是否可用，请运行 `npm run check:api`。
+Jev 保留原始概率和确定度。LLM 按相同问题和分类返回相对权重，代码归一化为分布并计算评分与分布集中度；LLM 百分比是模型估计，不是经校准的真实心理概率，也不能与 Jev 的结果直接当作同尺度测量。没有新增回复生成、改写或报告功能。
+
+LLM 使用独立的请求编排：共享分类定义、缩短输出编号、并行分析，逐句完成后只计算一次总览。DeepSeek 等已确认支持的型号会关闭深度思考；不支持关闭的型号沿用平台设置。我方回复仍隔离之后发生的聊天，避免拿后续结果倒推当时的表达质量。
+
+返回值会校验选项、数量和数值范围。格式错误只重试未通过的判断；截断则自动拆小批、增加输出预算重试一次，仍失败就保留已完成批次并提示，不补造分数。百炼按具体型号处理思考参数，并兼容只支持流式返回的模型。连接检测最长 40 秒，可在页面取消；平台未开通服务、额度不足会分别提示。已用 DeepSeek 官方及百炼的 Qwen、DeepSeek、Kimi、GLM、MiniMax 代表型号做真实链路测试；其他平台的预设与协议测试不等于逐型号验证。尚未完成中文恋爱聊天的跨模型准确率评测。
 
 ```sh
 npm run dev        # 开发模式：http://127.0.0.1:5178/

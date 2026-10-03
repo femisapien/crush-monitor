@@ -1,12 +1,12 @@
 {
   "name": "crush-monitor",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "concurrently -k -n api,web \"tsx watch server/index.ts\" \"vite --host 127.0.0.1\"",
     "build": "tsc --noEmit && vite build",
-    "start": "tsx server/index.ts",
+    "start": "tsx scripts/start.ts",
     "test": "tsx --test tests/*.test.ts",
     "check:live": "tsx scripts/check-live.ts",
     "setup": "tsx scripts/setup.ts",
@@ -37,7 +37,7 @@
     "vite": "^6.3.0"
   },
   "license": "MIT",
-  "description": "Local-first WeChat-style conversation analysis powered by your own Jev API key",
+  "description": "Local-first conversation analysis with Jev or your own LLM API",
   "engines": {
     "node": ">=22.12.0"
   }

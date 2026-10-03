@@ -2,7 +2,7 @@
 
 [简体中文](README.md) · English
 
-A Jev-powered tool for looking at conversations with your crush or partner. It helps you make sense of emotions and intentions, and spot replies you could have worded better.
+A tool for looking at conversations with your crush or partner, using Jev or a text LLM. It helps you make sense of emotions and intentions, and spot replies you could have worded better.
 
 AI doesn't know your relationship or what happens outside the chat. Take the results lightly—as another perspective. Your own judgment and an honest conversation still matter more.
 
@@ -12,7 +12,7 @@ AI doesn't know your relationship or what happens outside the chat. Take the res
 - **Emotions and intentions:** the top three probabilities from 12 emotion and 35 intention categories.
 - **Affection score and reply grades:** a conversation-level score, SSS–D grades for your replies, and suggested next steps.
 - **Ongoing analysis:** paste more messages to continue. Overlapping excerpts are detected, long conversations run in batches, and results survive a page refresh.
-- **Run locally with your own key:** choose TypeSafe, Vercel AI Gateway or OpenRouter and use your own API credits. No hosted deployment required.
+- **Run locally with your own key:** configure your provider, model and API key directly in the browser. No hosted deployment required.
 
 The interface and analysis labels are currently in Chinese. This README provides English setup instructions; it does not add an English UI.
 
@@ -23,19 +23,40 @@ Jev is TypeSafe's model for structured judgments, returning classifications, sco
 - [Launch post by founder Diogo Almeida](https://x.com/CompleteSkeptic/status/2099925682726002904)
 - [Official introduction](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
 
-## Get an API key
+## Choose a model and get an API key
 
-Choose **one** provider below. All three serve Jev; you do not need three accounts or a Vercel-hosted website.
+**We recommend starting with Jev.** The app was originally designed around its classifications, scores and probabilities. If registration, payment or getting a Jev key is difficult, use a text LLM such as DeepSeek or Qwen instead. Emotions, intentions, affection scores and reply grades remain the same features. Results vary by model; we do not have an accuracy ranking for relationship conversations.
+
+### First choice: Jev
+
+Create a key with one of these providers and select its **Jev** entry in the app. Model IDs are preset; you do not need to find one yourself or deploy the website to Vercel.
 
 | Provider | Create a key | Setup choice | Free credits |
 | --- | --- | --- | --- |
-| TypeSafe | Sign in to the [TypeSafe console](https://console.typesafe.ai/), create a key under API Keys and copy it | `typesafe` | New users previously received **$5 in trial credits**; check the console for current availability and amount |
-| Vercel AI Gateway | Sign in to Vercel, open [AI Gateway → API Keys](https://vercel.com/d?to=/%5Bteam%5D/~/ai-gateway/api-keys) and select **Create key**. Use an AI Gateway key, not a Vercel account Access Token | `vercel` | **$5/month** on the free tier; card verification required. Purchasing credits ends the monthly free grant ([details](https://vercel.com/docs/ai-gateway/pricing)) |
-| OpenRouter | Sign in to [OpenRouter Keys](https://openrouter.ai/settings/keys), select **Create Key** and copy the new key | `openrouter` | A small new-user trial allowance, with no fixed amount publicly specified. [Jev is paid](https://openrouter.ai/typesafe/jev-1.13/), not a free model ([details](https://openrouter.ai/support/)) |
+| TypeSafe | Sign in to the [TypeSafe console](https://console.typesafe.ai/), create a key under API Keys and copy it | Jev · TypeSafe | **New signups no longer receive free credits.** The former $5 offer has stopped, with no announced return date ([official announcement](https://x.com/typesafeai/status/2104337824292220981)) |
+| Vercel AI Gateway | Sign in to Vercel, open [AI Gateway → API Keys](https://vercel.com/d?to=/%5Bteam%5D/~/ai-gateway/api-keys) and select **Create key**. Use an AI Gateway key, not a Vercel account Access Token | Jev · Vercel AI Gateway | The platform offers **$5/month, but Jev is currently ineligible**. Its catalog entry does not accept free credits; purchased credits are required ([model list](https://vercel.com/ai-gateway/models?q=jev), [rules](https://vercel.com/docs/ai-gateway/pricing)) |
+| OpenRouter | Sign in to [OpenRouter Keys](https://openrouter.ai/settings/keys), select **Create Key** and copy the new key | Jev · OpenRouter | The FAQ mentions a small new-user allowance, but specifies neither an amount nor Jev eligibility. [Jev is paid](https://openrouter.ai/typesafe/jev-1.13/); top up if you have no usable balance. Free-model quotas are not Jev credits ([details](https://openrouter.ai/support/)) |
 
-Vercel AI Gateway currently requires a valid credit card on the account, including for free usage. Without verification, requests return 403.
+Vercel requires credit-card verification for its free tier ([official guidance](https://community.vercel.com/t/free-credits-temporarily-have-restricted-access-due-to-abuse/21461/8)). Purchasing credits moves the account to the paid tier and ends the monthly $5 grant.
 
-Free-credit information checked on 2026-09-22. Make sure the account has available credits and access to Jev; grants and promotions may change, so check the provider's dashboard.
+Checked on **2026-10-04**. Platform credits do not automatically mean free Jev access. Confirm your balance and model permissions; policies and dashboard eligibility may change.
+
+### Alternative: a text LLM
+
+DeepSeek and Qwen are convenient starting points for users in mainland China. If you already have another provider's key, use its matching entry.
+
+Built-in LLM presets include [DeepSeek](https://platform.deepseek.com/api_keys), [Qwen / Alibaba Bailian](https://bailian.console.aliyun.com/), [GLM](https://bigmodel.cn/usercenter/proj-mgmt/apikeys), [Kimi](https://platform.kimi.com/), [Doubao / Volcengine Ark](https://console.volcengine.com/ark/), [SiliconFlow](https://cloud.siliconflow.cn/account/ak), [OpenAI](https://platform.openai.com/api-keys), [Gemini](https://aistudio.google.com/apikey), [Claude](https://platform.claude.com/settings/keys), [OpenRouter](https://openrouter.ai/settings/keys), and [Vercel AI Gateway](https://vercel.com/ai-gateway).
+
+- **Pick a model:** paste your key to load a searchable list. Clicking a model fills the field and closes the list. If listing is unsupported, enter the model ID from the provider's console.
+- **Start with a fast text model**, such as DeepSeek Flash or Qwen Flash. Dedicated image, audio and embedding models are filtered out; thinking models may take longer. A listed model may still require activation or credits on your account—use the connection test to check.
+- **Test and save:** the test shows elapsed time, can be cancelled and stops after 40 seconds. Missing activation and insufficient credits have separate messages. A failed test preserves the previous configuration. A chat subscription does not include API credits; check the provider's console for trials and pricing.
+
+<details>
+<summary>Other regions, gateways or local models</summary>
+
+Choose the custom OpenAI / Claude-compatible service and enter the provider's Base URL, model ID and key. For local servers without authentication, use `local` as the key. Protocol compatibility does not mean every model has been tested.
+
+</details>
 
 ## Run locally
 
@@ -43,35 +64,33 @@ Install Node.js 22.12+. Download or clone this repository, then run these comman
 
 ```sh
 npm ci
-npm run setup -- --en
-```
-
-**Choose the provider, then paste its key.** Key input is hidden and saved in the local `.env`. The endpoint and model are set automatically. Setup sends one synthetic test request to verify the connection, using a small amount of API credits without reading your chats.
-
-```sh
 npm run build
 npm start
 ```
 
-Open **http://127.0.0.1:3178/** and leave the terminal running. Next time, just run `npm start`. To change providers or keys, run setup again and restart the service; no rebuild is required.
+Startup attempts to open **http://127.0.0.1:3178/** in your browser. Open it manually if needed. First launch shows model settings: **choose provider → paste key → confirm model → test and save**. The test sends synthetic questions, costs a small amount of API credits, and does not send your chats. A failed test preserves the previous configuration.
+
+Keep the terminal running; next time use `npm start`. Change providers in **聊天设置 → 模型设置** (Chat settings → Model settings), with no restart required. Changing models preserves messages but clears old analysis and runs it again.
+
+Keys are stored in `.runtime/model.json` by the local server, never in browser storage or returned in settings responses. This is **plaintext local configuration**, restricted to the current user on macOS/Linux, not an encrypted vault. Do not share `.runtime`. Configuration endpoints are local-only; the service listens on loopback by default.
 
 <details>
-<summary>Manual configuration / upgrading an existing installation</summary>
+<summary>Upgrading / CLI configuration</summary>
 
-Alternatively, copy `.env.example` to `.env` and edit only these two lines:
-
-```dotenv
-JEV_PROVIDER=vercel
-JEV_API_KEY=your_provider_key
-```
-
-Allowed providers: `typesafe`, `vercel`, `openrouter`. The key must belong to the selected provider. Do not add an API URL or model name. The old `TYPESAFE_API_KEY=...` configuration still works without changes when staying with TypeSafe.
-
-`JEV_API_KEY` takes precedence. If unset, the selected provider uses `TYPESAFE_API_KEY`, `AI_GATEWAY_API_KEY` or `OPENROUTER_API_KEY`, respectively. Credentials are never borrowed from a different provider. Shell environment variables take precedence over `.env`; remove stale shell settings if necessary.
+Existing Jev `.env` settings remain supported, as does `npm run setup -- --en`. Browser-saved configuration takes precedence over `.env`. Delete `.runtime/model.json` to return to environment settings, then refresh. Changing provider or Base URL requires entering the matching key again. Set `CRUSH_OPEN_BROWSER=0` to disable automatic browser opening.
 
 </details>
 
-Run `npm run check:api` to retry the connection test. For 401, check the key; 402, credits; 403, model permissions; 429, rate limits. For network errors, check connectivity to the selected provider. Setup reports saved configuration and successful verification separately.
+401: check key; 402: credits; 403: permissions; 404: model ID/endpoint; 429: rate limits. If your endpoint does not support `response_format`, turn off JSON mode in connection options and test again; output validation remains strict.
+
+### Installing with an AI agent
+
+You can give this repository link to Codex, Claude Code or another agent and ask it to follow the local setup steps. For agents:
+
+1. Check Node.js, install dependencies, build and start the service. No key is needed to open the setup page; do not block installation while the user obtains one.
+2. If the user has no preference, recommend Jev and link to the providers above. Offer LLMs when obtaining a Jev key is inconvenient; respect an existing key or explicit choice.
+3. Guide the user to enter their key, choose a model and test it in the local settings page. Do not ask them to paste secrets into the conversation or edit configuration files manually. Follow errors about access, credits or model IDs instead of retrying blindly.
+4. Hand over the actual URL, the restart command and `Ctrl+C` to stop the server. Distinguish “page running,” “connection verified” and “chat analysis verified”; report only what was checked.
 
 ## Usage
 
@@ -111,19 +130,17 @@ Multiline bodies and consecutive messages from the same person are preserved. Da
 - Each model request stays within 500 messages and 12,000 text characters. Overlong individual messages are retained but need splitting before analysis. Paste at most 250,000 characters at a time; total history depends on browser storage capacity.
 - Chats and results stay in this browser's local database. **清空聊天，重新开始** (Clear chat and start over) deletes them. Other browsers or URL ports do not share the same data; clearing browser data also removes it.
 - Original messages needed for analysis are sent to your selected platform and its model provider using your account's credits. Local storage does not mean offline inference.
-- If analysis fails, check the terminal, API key and account credits. Never commit `.env` or private conversations.
+- If analysis fails, check the terminal, API key and account credits. Never commit `.env`, `.runtime` or private conversations.
 
 ## Development
 
-React + TypeScript + Vite + Express. The same emotion, intention and scoring rules run through three endpoints:
+React + TypeScript + Vite + Express. The existing categories, scoring weights, grades, next-step rules and incremental chat processing are shared by all providers. The adapter supports OpenAI Chat Completions, Anthropic Messages, and native Jev endpoints (TypeSafe, Vercel, OpenRouter).
 
-| Provider | API | Model |
-| --- | --- | --- |
-| TypeSafe | [System One](https://docs.typesafe.ai/api) | `jev-1.13.0` |
-| Vercel | [TypeSafe-compatible API](https://vercel.com/docs/ai-gateway/sdks-and-apis/typesafe) | `typesafe-ai/jev` |
-| OpenRouter | [Decisions (Alpha)](https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-questions-and-answers-request) | `typesafe/jev-1.13` |
+Jev distributions remain unchanged. LLMs return relative weights against the same questions and categories; code normalizes them into distributions and derives scores and distribution concentration. LLM percentages are not calibrated probabilities of someone's feelings, nor directly comparable measurements to Jev. No reply generation or new analysis features are added.
 
-Native Jev probabilities and confidence are preserved; Chat Completions is not used to simulate scores. Vercel manages its model alias, so the underlying version may change. Results are not guaranteed to be identical across providers. Offline tests cover all three adapters and the analysis pipeline. On 2026-09-22, a real Vercel account passed checks for all three question types, the affection overview, emotions, intentions and reply grades. OpenRouter has not yet been verified with a real account. Run `npm run check:api` to verify your own access.
+LLMs use a separate request pipeline: shared category definitions, short output IDs, concurrent batches and one overview after per-message analysis. Thinking is disabled for DeepSeek and other explicitly supported models; unsupported models keep their platform defaults. Self-reply ratings cannot see later messages.
+
+Categories, counts and numeric ranges are validated. Only invalid judgments are retried; truncated batches are split and retried once with a larger output budget. Completed batches are retained if recovery fails, without placeholder scores. Bailian uses model-specific thinking controls and accepts streaming-only models. Connection checks time out after 40 seconds and can be cancelled; activation and quota errors are reported separately. Real API tests cover native DeepSeek and representative Qwen, DeepSeek, Kimi, GLM and MiniMax models on Bailian; other presets and protocol tests do not imply per-model verification. Cross-model accuracy on Chinese relationship chats has not been benchmarked.
 
 ```sh
 npm run dev        # http://127.0.0.1:5178/

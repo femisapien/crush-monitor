@@ -1,9 +1,16 @@
+import { execFile } from "node:child_process";
 import "dotenv/config";
 import express from "express";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { analyze, requestSchema } from "./analysis";
-import { providerStatus, ConfigurationError } from "./provider-config";
+import { ConfigurationError } from "./provider-config";
+import {
+  activeConfig,
+  configFingerprint,
+  publicSettings,
+} from "./model-config";
+import { settingsRouter } from "./settings-api";
 import { ProviderError, providerErrorMessage } from "./provider";
 const app = express();
 app.disable("x-powered-by");
@@ -14,7 +21,36 @@ app.use((_req, res, next) => {
   res.setHeader("Cache-Control", "no-store");
   next();
 });
-app.get("/api/health", (_req, res) => res.json(providerStatus()));
+// Host allowlist prevents a DNS-rebound website from reading the local config token.
+app.use("/api", (req, res, next) => {
+  const host = req.headers.host || "";
+  if (!/^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(host)) {
+    res.status(403).json({ error: "请使用本机地址访问。" });
+    return;
+  }
+  const origin = req.headers.origin;
+  const allowed = [
+    `http://${host}`,
+    "http://127.0.0.1:5178",
+    "http://localhost:5178",
+  ];
+  if (origin && !allowed.includes(origin)) {
+    res.status(403).json({ error: "请求来源不允许" });
+    return;
+  }
+  next();
+});
+app.use("/api/settings", settingsRouter);
+app.get("/api/health", (_req, res) => {
+  const s = publicSettings();
+  res.json({
+    configured: s.configured,
+    engine: s.protocol === "jev" ? "jev" : "llm",
+    provider: s.preset,
+    model: s.model,
+    fingerprint: s.fingerprint,
+  });
+});
 let calls = 0;
 let windowAt = Date.now();
 let active = 0;
@@ -34,9 +70,11 @@ app.post("/api/analyze", async (req, res) => {
     res.status(400).json({ error: "聊天结构或长度不符合要求，请校正后重试" });
     return;
   }
-  const configuration = providerStatus();
+  const configuration = publicSettings();
   if (!configuration.configured) {
-    res.status(503).json({ error: configuration.error });
+    res
+      .status(503)
+      .json({ error: "请先打开模型设置，填写 API Key 并检测连接。" });
     return;
   }
   const now = Date.now();
@@ -71,7 +109,18 @@ app.post("/api/analyze", async (req, res) => {
     if (!res.writableEnded) controller.abort();
   });
   try {
-    res.json(await analyze(valid.data, controller.signal));
+    const config = activeConfig();
+    const expected = req.get("x-model-fingerprint");
+    if (expected && expected !== configFingerprint(config)) {
+      res.status(409).json({ error: "模型配置已更改，请重新开始分析。" });
+      return;
+    }
+    const result = await analyze(valid.data, controller.signal, config);
+    if (configFingerprint(activeConfig()) !== configFingerprint(config)) {
+      res.status(409).json({ error: "模型配置已更改，请重新开始分析。" });
+      return;
+    }
+    res.json(result);
   } catch (error) {
     const code = Number((error as { status?: number }).status) || 502;
     if (!res.headersSent && !controller.signal.aborted)
@@ -104,11 +153,27 @@ app.use(
 );
 const port = Number(process.env.PORT || 3178);
 app.listen(port, process.env.HOST || "127.0.0.1", () => {
-  const status = providerStatus();
+  if (process.env.CRUSH_OPEN_BROWSER === "1") {
+    const url = `http://127.0.0.1:${port}/`;
+    const command =
+      process.platform === "darwin"
+        ? "open"
+        : process.platform === "win32"
+          ? "rundll32"
+          : "xdg-open";
+    execFile(
+      command,
+      process.platform === "win32"
+        ? ["url.dll,FileProtocolHandler", url]
+        : [url],
+      () => {},
+    );
+  }
+  const status = publicSettings();
   console.log(`Crush API: http://${process.env.HOST || "127.0.0.1"}:${port}`);
   console.log(
     status.configured
-      ? `Jev: ${status.provider} · ${status.model} · Key configured (not yet verified)`
-      : status.error,
+      ? `Model: ${status.preset} · ${status.model} · Key configured (not yet verified)`
+      : "请在网页中设置模型和 API Key。",
   );
 });

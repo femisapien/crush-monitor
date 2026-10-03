@@ -399,7 +399,7 @@ test("三平台贯通总览、对方情绪意图、我方评级，使用同一�
     for (const provider of ["typesafe", "vercel", "openrouter"]) {
       process.env.JEV_PROVIDER = provider;
       process.env.JEV_API_KEY = "test-only-key";
-      const { model, latencyMs, ...result } = await analyze(request);
+      const { model, latencyMs, ...result } = await analyze(request, undefined, getProviderConfig());
       assert.ok(model);
       results.push(result);
     }

@@ -1,7 +1,8 @@
 import type { Questions, SystemOneRequest } from "@typesafe-ai/sdk";
 import { setTimeout as delay } from "node:timers/promises";
 import { z } from "zod";
-import { getProviderConfig, type ProviderConfig } from "./provider-config";
+import { activeConfig, type ActiveConfig } from "./model-config";
+import { evaluateLlm } from "./llm";
 
 const probability = z.number().min(0).max(1);
 const distribution = z.record(probability);
@@ -43,10 +44,10 @@ export function providerErrorMessage(error: unknown): string {
   return "连接超时或网络不可达，请检查网络后重试。 / Connection failed or timed out.";
 }
 
-function httpError(status: number, name: string) {
+export function httpError(status: number, name: string) {
   const reason: Record<number, string> = {
     400: "请求未被接受，请检查模型是否可用或缩小聊天范围 / Invalid request",
-    401: "Key 无效或已过期，请运行 npm run setup 重新配置 / Invalid API key",
+    401: "Key 无效或已过期，请打开网页的模型设置重新配置 / Invalid API key",
     402: "额度不足，请在该平台检查余额或计费设置 / Insufficient credits",
     403: "没有模型调用权限，请检查 Key 权限和模型访问权限 / Access denied",
     404: "模型或接口暂不可用，请检查平台公告 / Model or endpoint unavailable",
@@ -96,9 +97,11 @@ export function validateResult(value: unknown, questions: Questions) {
 export async function evaluate(
   payload: SystemOneRequest<Questions>,
   signal?: AbortSignal,
-  config: ProviderConfig = getProviderConfig(),
+  config: ActiveConfig = activeConfig(),
   fetchImpl: typeof fetch = fetch,
 ) {
+  if ("engine" in config)
+    return evaluateLlm(payload, config, signal, fetchImpl);
   const deadline = AbortSignal.timeout(45000);
   const requestSignal = signal ? AbortSignal.any([signal, deadline]) : deadline;
   for (let attempt = 0; ; attempt++) {
@@ -160,7 +163,7 @@ export async function evaluate(
 }
 
 export async function checkProvider(
-  config: ProviderConfig = getProviderConfig(),
+  config: ActiveConfig = activeConfig(),
   signal?: AbortSignal,
 ) {
   const result = await evaluate(

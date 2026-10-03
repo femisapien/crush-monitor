@@ -1,3 +1,5 @@
+import { ModelSettings } from "./ModelSettings";
+import type { PublicSettings } from "../shared/model-presets";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   loadConversation,
@@ -104,6 +106,20 @@ function Modal({
 }
 export default function App() {
   const a = useAnalysis();
+  const [modelConfig, setModelConfig] = useState<PublicSettings | null>(null);
+  const [modelOpen, setModelOpen] = useState(false);
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
+      .then((s) => {
+        setModelConfig(s);
+        if (!s.configured) setModelOpen(true);
+      })
+      .catch(() => setNotice("模型设置读取失败，请确认本机服务运行后刷新。"));
+  }, []);
   const [messages, setMessages] = useState<Message[]>([]),
     [input, setInput] = useState(""),
     [self, setSelf] = useState(""),
@@ -132,15 +148,26 @@ export default function App() {
   });
   useEffect(() => {
     let live = true;
-    loadConversation()
-      .then((saved) => {
+    Promise.all([
+      loadConversation(),
+      fetch("/api/health")
+        .then((r) => r.json())
+        .catch(() => null),
+    ])
+      .then(([saved, health]) => {
         if (!live) return;
         if (saved?.schema === 1) {
           setMessages(saved.messages);
           setSelf(saved.self);
           setOther(saved.other);
           setRelation(saved.relation);
-          a.restore(saved);
+          if (
+            health?.configured &&
+            saved.modelFingerprint &&
+            saved.modelFingerprint !== health.fingerprint
+          )
+            a.reset();
+          else a.restore(saved);
         }
         setReady(true);
       })
@@ -184,6 +211,7 @@ export default function App() {
           trend: a.trend,
           analyzedCount: a.analyzedCount,
           completed: a.status === "complete",
+          modelFingerprint: a.modelFingerprint,
         }
       : null;
     if (lastSavedMessages.current !== messages || a.status !== "loading") {
@@ -203,6 +231,7 @@ export default function App() {
     a.trend,
     a.analyzedCount,
     a.status,
+    a.modelFingerprint,
   ]);
   useEffect(() => {
     const flush = () => {
@@ -242,6 +271,10 @@ export default function App() {
   function start(ms: Message[]) {
     setMessages(ms);
     setInput("");
+    if (!modelConfig?.configured) {
+      setModelOpen(true);
+      return;
+    }
     a.run(ms, relation);
   }
   function add(ms: Message[], mode: "auto" | "append" | "skip" = "auto") {
@@ -680,8 +713,35 @@ export default function App() {
           </button>
         </Modal>
       )}
+      {modelOpen && modelConfig && (
+        <Modal title="模型设置" close={() => setModelOpen(false)}>
+          <ModelSettings
+            initial={modelConfig}
+            saved={(s) => {
+              const changed = s.fingerprint !== modelConfig.fingerprint;
+              setModelConfig(s);
+              setModelOpen(false);
+              if (changed) a.reset();
+              if (messages.length && (changed || a.status !== "complete"))
+                void a.run(messages, relation);
+              setNotice(messages.length ? "" : "连接成功，模型设置已保存。");
+            }}
+          />
+        </Modal>
+      )}
       {settings && (
         <Modal title="聊天设置" close={() => setSettings(false)}>
+          <button
+            className="secondary"
+            onClick={() => {
+              if (busy) a.cancel();
+              setSettings(false);
+              setModelOpen(true);
+            }}
+          >
+            模型设置
+            {modelConfig?.configured ? ` · ${modelConfig.model}` : " · 未配置"}
+          </button>
           <label className="field">
             你们的关系
             <select
@@ -840,7 +900,7 @@ export default function App() {
                 <span>/100</span>
               </div>
               <p>
-                已完成分析的我方回复平均分。Jev
+                已完成分析的我方回复平均分。模型
                 根据发出时的前文评价表达质量，再按固定分数区间显示评级。
               </p>
               <div className="reply-guide">

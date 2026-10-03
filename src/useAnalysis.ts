@@ -31,6 +31,8 @@ const pause = (ms: number, signal: AbortSignal) =>
     if (signal.aborted) abort();
   });
 export function useAnalysis() {
+  const [modelFingerprint, setModelFingerprint] = useState("");
+  const modelRef = useRef("");
   const [overview, setOverview] = useState<Overview | null>(null),
     [overviewFresh, setOverviewFresh] = useState(false),
     [lines, setLines] = useState<Record<string, LineResult>>({}),
@@ -73,6 +75,8 @@ export function useAnalysis() {
     reset();
     base.current = { messages: s.messages, relation: s.relation };
     if (s.rubric !== RUBRIC) return;
+    modelRef.current = s.modelFingerprint || "";
+    setModelFingerprint(modelRef.current);
     savedLines.current = s.lines;
     savedEvents.current = s.events;
     processed.current = s.analyzedCount;
@@ -93,6 +97,36 @@ export function useAnalysis() {
     setStatus("loading");
     setError("");
     setOverviewFresh(false);
+    let fingerprint = "",
+      llm = false;
+    try {
+      const response = await fetch("/api/health", { signal: ctrl.signal });
+      const health = await response.json();
+      if (!response.ok || !health.configured)
+        throw new Error("请先在模型设置中填写 Key 并检测连接。");
+      if (rev.current !== revision) return;
+      fingerprint = health.fingerprint;
+      llm = health.engine === "llm";
+      if (modelRef.current !== fingerprint) {
+        base.current = null;
+        savedLines.current = {};
+        savedEvents.current = {};
+        processed.current = 0;
+        setLines({});
+        setEvents({});
+        setTrend([]);
+        setOverview(null);
+        setAnalyzedCount(0);
+      }
+      modelRef.current = fingerprint;
+      setModelFingerprint(fingerprint);
+    } catch (e) {
+      if (rev.current === revision) {
+        setStatus("error");
+        setError((e as Error).message);
+      }
+      return;
+    }
     const previous = base.current;
     const append =
       !!previous &&
@@ -152,13 +186,16 @@ export function useAnalysis() {
     }
     let failed = 0,
       done = 0;
-    setProgress({ done: 0, total: jobs.length + 2 });
+    setProgress({ done: 0, total: jobs.length + (llm ? 1 : 2) });
     async function execute(job: AnalysisRequest) {
       let data: AnalysisResponse | undefined;
       for (let attempt = 0; attempt < 4; attempt++) {
         const response = await fetch("/api/analyze", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-model-fingerprint": fingerprint,
+          },
           body: JSON.stringify(job),
           signal: ctrl.signal,
         });
@@ -233,7 +270,7 @@ export function useAnalysis() {
       }
     }
     // Initial overview is provisional until historical event extraction completes.
-    await safely(first);
+    if (!llm) await safely(first);
     async function worker() {
       while (jobs.length && rev.current === revision) {
         const job = jobs.shift()!;
@@ -286,6 +323,7 @@ export function useAnalysis() {
     }
   }
   return {
+    modelFingerprint,
     overview,
     overviewFresh,
     lines,
